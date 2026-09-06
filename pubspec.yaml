@@ -1,6 +1,6 @@
 name: trackr
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_colorpicker: ^1.1.0
+  flutter_launcher_icons: ^0.14.4
   flutter_spinbox: ^0.13.1
   path: ^1.9.1
   sqflite: ^2.4.2+1
@@ -21,3 +22,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "lib/assets/R.png" # Sesuaikan dengan lokasi gambarmu
+  min_sdk_android: 21 # Opsional untuk mendukung Android adaptive icons
