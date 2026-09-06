@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_spinbox/flutter_spinbox.dart';
+
+import 'dart:async';
+
 import 'package:trackr/db/db_helper.dart';
 import 'package:trackr/db/model.dart';
 import 'package:trackr/helper/helper.dart';
@@ -10,9 +12,9 @@ class InputTracker extends StatefulWidget {
   final String? trackerName;
   final String trackerType;
   final String? trackerUnit;
-  final int? latestItem;
+  final String? latestItem;
   final int? trackerPresetsId;
-  final int? totalLoggedItem;
+  final String? totalLoggedItem;
   final int? entries;
   const InputTracker({
     super.key,
@@ -134,7 +136,7 @@ class _InputTrackerState extends State<InputTracker> {
                                   Text('Latest'),
                                   Row(
                                     children: [
-                                      widget.latestItem! != 0
+                                      (items.first.latestItem ?? 0) != 0
                                           ? Text(
                                               items.first.latestItem.toString(),
                                             )
@@ -176,7 +178,7 @@ class _InputTrackerState extends State<InputTracker> {
                                   Text('Total Logged'),
                                   Row(
                                     children: [
-                                      widget.totalLoggedItem! != 0
+                                      (items.first.totalLoggedItem ?? 0) != 0
                                           ? Text(
                                               items.first.totalLoggedItem
                                                   .toString(),
@@ -216,8 +218,8 @@ class _InputTrackerState extends State<InputTracker> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      showGeneralDialog(
+                    onPressed: () async {
+                      await showGeneralDialog(
                         context: context,
                         pageBuilder: (context, animation, secondaryAnimation) {
                           return Dialog(
@@ -287,26 +289,51 @@ class _InputTrackerState extends State<InputTracker> {
                                       SizedBox(width: 10),
                                       ElevatedButton(
                                         onPressed: () async {
-                                          int loggedItem =
-                                              int.parse(_valueController.text) +
-                                              widget.totalLoggedItem!;
-                                          print(
-                                            "Adding new entry: newloggedItem=$loggedItem, totalLoggedItem=${widget.totalLoggedItem}, entries=${widget.entries}",
-                                          );
+                                          // Get current item data to calculate accurate totals
+                                          final currentItems = await DbHelper
+                                              .instance
+                                              .readSelectedItem(
+                                                widget.trackerId!,
+                                              );
+                                          final currentTotal =
+                                              currentItems.isNotEmpty
+                                              ? currentItems
+                                                        .first
+                                                        .totalLoggedItem ??
+                                                    "0"
+                                              : "0";
+                                          final currentEntries =
+                                              currentItems.isNotEmpty
+                                              ? (await DbHelper.instance
+                                                        .readAllHistoryByTrackerId(
+                                                          widget.trackerId!,
+                                                        ))
+                                                    .length
+                                              : 0;
+
+                                          final newValue =
+                                              _valueController.text;
+                                          dynamic fixValue;
+                                          if (int.tryParse(newValue) == null) {
+                                            fixValue =
+                                                (int.parse(currentTotal) + 1)
+                                                    .toString();
+                                          } else {
+                                            fixValue =
+                                                (int.parse(currentTotal) +
+                                                        int.parse(newValue))
+                                                    .toString();
+                                          }
+
                                           final addNewValue = Item(
                                             id: widget.trackerId!,
                                             trackerItemId:
                                                 widget.trackerPresetsId,
                                             note: _noteController.text,
-                                            latestItem: int.parse(
-                                              _valueController.text,
-                                            ),
-                                            totalLoggedItem:
-                                                int.parse(
-                                                  _valueController.text,
-                                                ) +
-                                                widget.totalLoggedItem!,
-                                            entries: widget.entries! + 1,
+                                            latestItem: newValue.toString(),
+                                            totalLoggedItem: fixValue,
+
+                                            entries: currentEntries + 1,
                                             createdAt: DateTime.now(),
                                           );
                                           final newHistory = History(
@@ -315,15 +342,23 @@ class _InputTrackerState extends State<InputTracker> {
                                             createdAt: DateTime.now(),
                                             note: _noteController.text,
                                           );
-                                          int status = await DbHelper.instance
-                                              .updateItem(addNewValue);
-                                          print(status);
+                                          await DbHelper.instance.updateItem(
+                                            addNewValue,
+                                          );
+
                                           await DbHelper.instance.createHistory(
                                             newHistory.toMap(),
                                           );
-                                          if (!mounted) return;
+                                          if (!context.mounted) return;
+
                                           Navigator.of(context).pop();
-                                          refreshData();
+                                          // Refresh data after dialog is closed to ensure proper UI update
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                                if (mounted) {
+                                                  refreshData();
+                                                }
+                                              });
                                         },
                                         child: Text('Save'),
                                       ),
@@ -335,6 +370,7 @@ class _InputTrackerState extends State<InputTracker> {
                           );
                         },
                       );
+                      refreshData();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(

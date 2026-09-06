@@ -3,8 +3,8 @@ class Item {
   final int? trackerItemId;
 
   final String note;
-  final int latestItem;
-  final int totalLoggedItem;
+  final String latestItem;
+  final String totalLoggedItem;
   final int entries;
   final DateTime createdAt;
 
@@ -37,8 +37,8 @@ class Item {
       id: map['id_tracker'],
 
       note: map['note'] ?? "",
-      latestItem: map['latestItem'] ?? 0,
-      totalLoggedItem: map['totalLoggedItem'] ?? 0,
+      latestItem: map['latestItem'] ?? "0",
+      totalLoggedItem: map['totalLoggedItem'] ?? "0",
       entries: map['entries'] ?? 0,
       createdAt: DateTime.parse(
         map['createdAt'] ?? DateTime.now().toIso8601String(),
@@ -147,8 +147,8 @@ class History {
 
 class ItemQty {
   final int? id;
-  final int? latestItem;
-  final int? totalLoggedItem;
+  final String? latestItem;
+  final String? totalLoggedItem;
 
   ItemQty({this.id, this.latestItem, this.totalLoggedItem});
 

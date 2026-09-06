@@ -403,8 +403,8 @@ class _TrackerCreateState extends State<TrackerCreate> {
             trackerItemId: presets.id,
 
             note: ' ',
-            latestItem: 0,
-            totalLoggedItem: 0,
+            latestItem: "0",
+            totalLoggedItem: "0",
             entries: 0,
             createdAt: DateTime.now(),
           );

@@ -42,8 +42,8 @@ class DbHelper {
         id_tracker_item INTEGER NOT NULL,
         
         note TEXT NOT NULL,
-        latestItem INTEGER NOT NULL,
-        totalLoggedItem INTEGER NOT NULL,
+        latestItem TEXT NOT NULL,
+        totalLoggedItem TEXT NOT NULL,
         entries INTEGER NOT NULL,
         createdAt TEXT NOT NULL,
 

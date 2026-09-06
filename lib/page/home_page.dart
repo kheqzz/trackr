@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+
 import 'package:trackr/db/db_helper.dart';
 import 'package:trackr/db/model.dart';
 import 'package:trackr/helper/helper.dart';
@@ -59,10 +59,7 @@ class _HomePageState extends State<HomePage> {
           }
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             final items = snapshot.data!;
-            print(
-              "Rendering tracked items: ${items.map((item) => item.toMap()).toList()}",
-            );
-            print("item id: ${items[0].item.id}");
+
             return Padding(
               padding: const EdgeInsets.only(top: 10),
               child: ListView.builder(
@@ -93,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                                 trackerType: item.trackerItemPresets.type,
                                 trackerUnit: item.trackerItemPresets.unit,
                                 trackerPresetsId: item.trackerItemPresets.id,
-                                latestItem: item.item.latestItem,
+                                latestItem: item.item.latestItem.toString(),
                                 totalLoggedItem: item.item.totalLoggedItem,
                               ),
                             ),
@@ -250,6 +247,5 @@ Future<List<TrackerItemPresets>> fetchTrackerItemPresets() async {
 Future<List<TrackedItem>> fetchAllTrackedItems() async {
   final data = await DbHelper.instance.readAllTrackedItems();
 
-  print("Fetched tracked items: $data");
   return data;
 }
