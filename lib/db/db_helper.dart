@@ -28,26 +28,26 @@ class DbHelper {
   Future _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE tracker_item(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_item INTEGER PRIMARY KEY AUTOINCREMENT,
         tracker_name TEXT NOT NULL,
         type TEXT NOT NULL,
         unit TEXT,
-        icon_color TEXT NOT NULL,
-        createdAt TEXT NOT NULL
+        icon_color TEXT NOT NULL
+       
       )''');
 
     await db.execute('''
       CREATE TABLE tracker(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_tracker INTEGER PRIMARY KEY AUTOINCREMENT,
         id_tracker_item INTEGER NOT NULL,
-        name TEXT NOT NULL,
+        
         note TEXT NOT NULL,
         latestItem INTEGER NOT NULL,
         totalLoggedItem INTEGER NOT NULL,
         entries INTEGER NOT NULL,
         createdAt TEXT NOT NULL,
 
-        FOREIGN KEY (id_tracker_item) REFERENCES tracker_item (id) 
+        FOREIGN KEY (id_tracker_item) REFERENCES tracker_item (id_item) 
         ON DELETE CASCADE 
         ON UPDATE CASCADE
         )''');
@@ -63,21 +63,18 @@ class DbHelper {
       'type': 'text',
 
       'icon_color': '0xff4CAF50',
-      'createdAt': DateTime.now().toIso8601String(),
     });
     batch.insert('tracker_item', {
       'tracker_name': 'money',
       'type': 'number',
       'unit': 'IDR',
       'icon_color': '#FF4CAF50',
-      'createdAt': DateTime.now().toIso8601String(),
     });
     batch.insert('tracker_item', {
       'tracker_name': 'weight',
       'type': 'number',
       'unit': 'kg',
       'icon_color': '#FF854E4E',
-      'createdAt': DateTime.now().toIso8601String(),
     });
     await batch.commit();
   }
@@ -95,6 +92,29 @@ class DbHelper {
   }
 
   // Read
+
+  Future<List<Item>> readItemsByTrackerItemId(int trackerItemId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'tracker',
+      where: 'id_tracker_item = ?',
+      whereArgs: [trackerItemId],
+    );
+    return result.map((e) => Item.fromMap(e)).toList();
+  }
+
+  Future<List<TrackedItem>> readAllTrackedItems() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+  SELECT
+  t.id_tracker,t.id_tracker_item, t.note, t.latestItem, t.totalLoggedItem, t.entries, t.createdAt,
+  ti.id_item, ti.tracker_name, ti.type, ti.unit, ti.icon_color
+  FROM tracker t
+  JOIN tracker_item ti ON t.id_tracker_item = ti.id_item
+''');
+    return result.map((e) => TrackedItem.fromMap(e)).toList();
+  }
+
   Future<List<Item>> readAllItems() async {
     final db = await instance.database;
     final result = await db.query('tracker');

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:trackr/db/db_helper.dart';
 import 'package:trackr/db/model.dart';
+import 'package:trackr/helper/helper.dart';
+import 'package:trackr/page/input_tracker.dart';
 import 'package:trackr/page/tracker_create.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,17 +14,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<Item>> _itemsFuture;
+  late Future<List<TrackedItem>> _trackedItemsFuture;
 
   @override
   void initState() {
     super.initState();
-    _itemsFuture = fetchData();
+
+    _trackedItemsFuture = fetchAllTrackedItems();
   }
 
   void refreshData() {
     setState(() {
-      _itemsFuture = fetchData();
+      _trackedItemsFuture = fetchAllTrackedItems();
     });
   }
 
@@ -45,7 +49,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       body: FutureBuilder(
-        future: _itemsFuture,
+        future: _trackedItemsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -55,15 +59,111 @@ class _HomePageState extends State<HomePage> {
           }
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             final items = snapshot.data!;
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ListTile(
-                  title: Text(item.name),
-                  subtitle: Text(item.note),
-                );
-              },
+
+            return Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 2,
+                      horizontal: 7,
+                    ),
+                    child: Material(
+                      borderRadius: BorderRadius.circular(20),
+
+                      color: Colors.white,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InputTracker(
+                                iconColor: item.trackerItemPresets.iconColor
+                                    .toColorFill(),
+                                trackerName:
+                                    item.trackerItemPresets.trackerName,
+
+                                trackerType: item.trackerItemPresets.type,
+                                trackerUnit: item.trackerItemPresets.unit,
+                                latestItem: item.item.latestItem,
+                                totalLoggedItem: item.item.totalLoggedItem,
+                              ),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: ListTile(
+                            leading: SizedBox(
+                              height: 50,
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: item.trackerItemPresets.iconColor
+                                        .toColorFill(),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      item.trackerItemPresets.trackerName
+                                          .toInitials(),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            title: Text(item.trackerItemPresets.trackerName),
+                            subtitle: Text("${item.item.entries} entries"),
+                            trailing: SizedBox(
+                              width: 80,
+                              child: Row(
+                                spacing: 10,
+                                mainAxisAlignment: MainAxisAlignment.end,
+
+                                children: [
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      item.item.latestItem != 0
+                                          ? Text(
+                                              item.item.latestItem.toString(),
+                                            )
+                                          : Icon(Icons.remove, size: 20),
+                                      Text(
+                                        'latest',
+                                        style: TextStyle(fontSize: 15),
+                                      ),
+                                    ],
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 15,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             );
           }
           return Center(
@@ -105,11 +205,12 @@ class _HomePageState extends State<HomePage> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => TrackerCreate()),
               );
+              refreshData();
             },
 
             style: ElevatedButton.styleFrom(
@@ -132,9 +233,16 @@ class _HomePageState extends State<HomePage> {
 
 Future<List<Item>> fetchData() async {
   final data = await DbHelper.instance.readAllItems();
-  print('fetching data from database');
-  for (var item in data) {
-    print('Is there any data? ${item.name}');
-  }
+
+  return data;
+}
+
+Future<List<TrackerItemPresets>> fetchTrackerItemPresets() async {
+  return await DbHelper.instance.readAllTrackerItemsPresets();
+}
+
+Future<List<TrackedItem>> fetchAllTrackedItems() async {
+  final data = await DbHelper.instance.readAllTrackedItems();
+  print("Fetched tracked items: $data");
   return data;
 }

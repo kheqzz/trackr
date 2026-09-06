@@ -1,6 +1,7 @@
 class Item {
   final int? id;
-  final String name;
+  final int? trackerItemId;
+
   final String note;
   final int latestItem;
   final int totalLoggedItem;
@@ -8,8 +9,9 @@ class Item {
   final DateTime createdAt;
 
   Item({
-    required this.id,
-    required this.name,
+    this.id,
+    required this.trackerItemId,
+
     required this.note,
     required this.latestItem,
     required this.totalLoggedItem,
@@ -19,8 +21,7 @@ class Item {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'name': name,
+      'id_tracker_item': trackerItemId,
       'note': note,
       'latestItem': latestItem,
       'totalLoggedItem': totalLoggedItem,
@@ -31,13 +32,16 @@ class Item {
 
   factory Item.fromMap(Map<String, dynamic> map) {
     return Item(
-      id: map['id'],
-      name: map['name'],
-      note: map['note'],
-      latestItem: map['latestItem'],
-      totalLoggedItem: map['totalLoggedItem'],
-      entries: map['entries'],
-      createdAt: DateTime.parse(map['createdAt']),
+      trackerItemId: map['id_tracker_item'],
+      id: map['id_tracker'],
+
+      note: map['note'] ?? "",
+      latestItem: map['latestItem'] ?? 0,
+      totalLoggedItem: map['totalLoggedItem'] ?? 0,
+      entries: map['entries'] ?? 0,
+      createdAt: DateTime.parse(
+        map['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }
@@ -61,23 +65,44 @@ class TrackerItemPresets {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'tracker_name': trackerName,
       'type': type,
       'unit': unit,
       'icon_color': iconColor,
-      'createdAt': createdAt.toIso8601String().split('T').first,
     };
   }
 
   factory TrackerItemPresets.fromMap(Map<String, dynamic> map) {
     return TrackerItemPresets(
-      id: map['id'],
+      id: map['id_item'],
       trackerName: map['tracker_name'],
       type: map['type'],
       unit: map['unit'] ?? "",
       iconColor: map['icon_color'],
-      createdAt: DateTime.parse(map['createdAt']),
+      createdAt: DateTime.parse(
+        map['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+    );
+  }
+}
+
+class TrackedItem {
+  final Item item;
+  final TrackerItemPresets trackerItemPresets;
+
+  TrackedItem({required this.item, required this.trackerItemPresets});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'item': item.toMap(),
+      'trackerItemPresets': trackerItemPresets.toMap(),
+    };
+  }
+
+  factory TrackedItem.fromMap(Map<String, dynamic> map) {
+    return TrackedItem(
+      item: Item.fromMap(map),
+      trackerItemPresets: TrackerItemPresets.fromMap(map),
     );
   }
 }
