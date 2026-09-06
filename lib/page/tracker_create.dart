@@ -36,6 +36,14 @@ class _TrackerCreateState extends State<TrackerCreate> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _unitController.dispose();
+    _colorController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
