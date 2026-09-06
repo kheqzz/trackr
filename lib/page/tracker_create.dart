@@ -182,6 +182,8 @@ class _TrackerCreateState extends State<TrackerCreate> {
                     Text('Color'),
                     TextField(
                       controller: _colorController,
+                      readOnly: true,
+                      style: TextStyle(fontSize: 12),
                       decoration: InputDecoration(
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -236,7 +238,9 @@ class _TrackerCreateState extends State<TrackerCreate> {
                                             MainAxisAlignment.end,
                                         children: [
                                           ElevatedButton(
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
                                             child: Text('Cancel'),
                                           ),
                                           ElevatedButton(
@@ -370,6 +374,7 @@ class _TrackerCreateState extends State<TrackerCreate> {
                       );
                       return;
                     }
+
                     final newPreset = TrackerItemPresets(
                       trackerName: _nameController.text,
                       type: _selectedType!,
