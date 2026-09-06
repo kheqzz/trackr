@@ -59,7 +59,10 @@ class _HomePageState extends State<HomePage> {
           }
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             final items = snapshot.data!;
-
+            print(
+              "Rendering tracked items: ${items.map((item) => item.toMap()).toList()}",
+            );
+            print("item id: ${items[0].item.id}");
             return Padding(
               padding: const EdgeInsets.only(top: 10),
               child: ListView.builder(
@@ -76,23 +79,26 @@ class _HomePageState extends State<HomePage> {
 
                       color: Colors.white,
                       child: InkWell(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => InputTracker(
+                                entries: item.item.entries,
                                 iconColor: item.trackerItemPresets.iconColor
                                     .toColorFill(),
                                 trackerName:
                                     item.trackerItemPresets.trackerName,
-
+                                trackerId: item.item.id!,
                                 trackerType: item.trackerItemPresets.type,
                                 trackerUnit: item.trackerItemPresets.unit,
+                                trackerPresetsId: item.trackerItemPresets.id,
                                 latestItem: item.item.latestItem,
                                 totalLoggedItem: item.item.totalLoggedItem,
                               ),
                             ),
                           );
+                          refreshData();
                         },
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
@@ -243,6 +249,7 @@ Future<List<TrackerItemPresets>> fetchTrackerItemPresets() async {
 
 Future<List<TrackedItem>> fetchAllTrackedItems() async {
   final data = await DbHelper.instance.readAllTrackedItems();
+
   print("Fetched tracked items: $data");
   return data;
 }

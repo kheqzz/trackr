@@ -51,7 +51,20 @@ class DbHelper {
         ON DELETE CASCADE 
         ON UPDATE CASCADE
         )''');
-
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS
+      history (
+        id_history INTEGER PRIMARY KEY
+        AUTOINCREMENT,
+        id_tracker INTEGER NOT NULL,
+        logged_item TEXT NOT NULL,
+        note TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (id_tracker) REFERENCES tracker (id_tracker)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+        )
+      ''');
     await _seedData(db);
   }
 
@@ -91,7 +104,22 @@ class DbHelper {
     return await db.insert('tracker_item', trackerItem);
   }
 
+  Future<int> createHistory(Map<String, dynamic> history) async {
+    final db = await instance.database;
+    return await db.insert('history', history);
+  }
+
   // Read
+
+  Future<List<History>> readAllHistoryByTrackerId(int trackerId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'history',
+      where: 'id_tracker = ?',
+      whereArgs: [trackerId],
+    );
+    return result.map((e) => History.fromMap(e)).toList();
+  }
 
   Future<List<Item>> readItemsByTrackerItemId(int trackerItemId) async {
     final db = await instance.database;
@@ -101,6 +129,21 @@ class DbHelper {
       whereArgs: [trackerItemId],
     );
     return result.map((e) => Item.fromMap(e)).toList();
+  }
+
+  Future<List<ItemQty>> readSelectedItem(int trackerId) async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      '''
+    SELECT
+     t.id_tracker, t.latestItem, t.totalLoggedItem
+     FROM tracker t
+     WHERE t.id_tracker = ?
+     
+    ''',
+      [trackerId],
+    );
+    return result.map((e) => ItemQty.fromMap(e)).toList();
   }
 
   Future<List<TrackedItem>> readAllTrackedItems() async {
@@ -133,8 +176,8 @@ class DbHelper {
     return await db.update(
       'tracker',
       item.toMap(),
-      where: 'id = ?',
-      whereArgs: [item.id],
+      where: 'id_tracker = ?',
+      whereArgs: [item.id!],
     );
   }
 
