@@ -197,7 +197,7 @@ class DbHelper {
   // Delete
   Future<int> deleteItem(int id) async {
     final db = await instance.database;
-    return await db.delete('tracker', where: 'id = ?', whereArgs: [id]);
+    return await db.delete('tracker', where: 'id_tracker = ?', whereArgs: [id]);
   }
 
   Future<int> deleteTrackerItemPresets(int id) async {

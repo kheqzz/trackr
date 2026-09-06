@@ -68,6 +68,32 @@ class _InputTrackerState extends State<InputTracker> {
           preferredSize: Size.fromHeight(18),
           child: const SizedBox(),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: SizedBox(
+              height: 20,
+
+              child: Material(
+                borderRadius: BorderRadius.circular(2),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(2),
+                  onTap: () async {
+                    await DbHelper.instance.deleteItem(widget.trackerId!);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    refreshData();
+                  },
+                  splashColor: Colors.red.withAlpha(10),
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
         title: Row(
           spacing: 10,
           children: [
